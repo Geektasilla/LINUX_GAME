@@ -1,341 +1,184 @@
 TASKS_HARD = [
-    # --- tar + cron: реальные кейсы ---
-    {"prompt": "Cron: ежедневный бэкап /home/user/data в /home/user/backups с датой (YYYY-MM-DD) в имени (tar.gz).",
-     "answers": ["tar -czf /home/user/backups/data-$(date +%F).tar.gz /home/user/data"]},
+    # --- CRON: Redirection & Logic ---
+    {"prompt": "Cron: запуск /opt/script.sh каждый день в 02:00, stdout и stderr в /var/log/backup.log.",
+     "answers": ["0 2 * * * /opt/script.sh >> /var/log/backup.log 2>&1"]},
 
-    {"prompt": "Cron: запуск бэкапа (tar.gz) каждый день в 02:00.",
-     "answers": ["0 2 * * * tar -czf /home/user/backups/data-$(date +%F).tar.gz /home/user/data"]},
+    {"prompt": "Cron: запуск команды только если успешно выполнилась предыдущая (&&) (проверка наличия /data).",
+     "answers": ["[ -d /data ] && /usr/local/bin/backup-job.sh"]},
 
-    {"prompt": "Cron: запуск скрипта /home/user/backup.sh каждый день в 02:00 и лог в /var/log/backup.log.",
-     "answers": ["0 2 * * * /home/user/backup.sh >> /var/log/backup.log 2>&1"]},
+    {"prompt": "Cron: запускать скрипт каждые 5 минут.",
+     "answers": ["*/5 * * * * /path/to/script.sh", "*/5 * * * * sh /path/to/script.sh"]},
 
-    {"prompt": "Cron: запуск команды только если каталог /data существует.",
-     "answers": ["[ -d /data ] && tar -czf /backup/data-$(date +%F).tar.gz /data"]},
-
-    {"prompt": "Cron: запуск команды только если файл /etc/passwd существует.",
-     "answers": ["[ -f /etc/passwd ] && echo ok"]},
-
-    {"prompt": "Cron: перенаправить только ошибки (stderr) в /var/log/cron.err.",
-     "answers": ["0 2 * * * /home/user/backup.sh 2>> /var/log/cron.err"]},
-
-    {"prompt": "Cron: перенаправить stdout в /var/log/cron.out и stderr в /var/log/cron.err.",
-     "answers": ["0 2 * * * /home/user/backup.sh >> /var/log/cron.out 2>> /var/log/cron.err"]},
-
-    {"prompt": "Cron: запуск каждый час в 0 минут (ровно в начале часа).",
-     "answers": ["0 * * * *"]},
-
-    {"prompt": "Cron: запуск каждые 2 часа.",
-     "answers": ["0 */2 * * *"]},
-
-    {"prompt": "Cron: запуск каждую минуту.",
-     "answers": ["* * * * *"]},
-
-    {"prompt": "Cron: запуск в 23:59 каждый день.",
-     "answers": ["59 23 * * *"]},
-
-    {"prompt": "Cron: запуск по будням в 09:00.",
+    {"prompt": "Cron: запускать скрипт по будням (Пн-Пт) в 09:00.",
      "answers": ["0 9 * * 1-5"]},
 
-    {"prompt": "Cron: запуск по выходным в 12:00.",
-     "answers": ["0 12 * * 0,6", "0 12 * * 6,0"]},
+    {"prompt": "Cron: очищать файл /tmp/debug.log каждое воскресенье в полночь (перезапись пустым).",
+     "answers": ["0 0 * * 0 > /tmp/debug.log", "0 0 * * 7 > /tmp/debug.log"]},
 
-    {"prompt": "Cron: запуск 1-го числа каждого месяца в 00:10.",
-     "answers": ["10 0 1 * *"]},
+    {"prompt": "Cron: запуск скрипта 1-го числа каждого месяца в 00:00.",
+     "answers": ["0 0 1 * * /path/to/monthly.sh"]},
 
-    {"prompt": "Cron: запуск каждый понедельник в 07:30.",
-     "answers": ["30 7 * * 1"]},
+    {"prompt": "Cron: подавить вывод ошибок (stderr) в никуда (/dev/null).",
+     "answers": ["* * * * * /path/to/command 2> /dev/null"]},
 
-    {"prompt": "Cron: запуск 15-го числа каждого месяца в 18:00.",
-     "answers": ["0 18 15 * *"]},
+    # --- FIND: Advanced Exec & Time ---
+    {"prompt": "Найти все файлы .log в /var/log и удалить их (используй -delete).",
+     "answers": ["find /var/log -name '*.log' -delete"]},
 
-    {"prompt": "Cron: запись, которая запускает /usr/bin/tar (полный путь) каждый день в 03:00.",
-     "answers": ["0 3 * * * /usr/bin/tar -czf /backup/data-$(date +%F).tar.gz /data",
-                 "0 3 * * * /bin/tar -czf /backup/data-$(date +%F).tar.gz /data"]},
+    {"prompt": "Найти файлы в /tmp старше 7 дней (mtime).",
+     "answers": ["find /tmp -type f -mtime +7"]},
 
-    {"prompt": "Cron: запуск скрипта с явным PATH в одной строке (пример).",
-     "answers": ["PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin; /home/user/backup.sh"]},
-
-    {"prompt": "Cron: как закомментировать задачу (отключить без удаления)?",
-     "answers": ["# 0 2 * * * /home/user/backup.sh"]},
-
-    # --- причины “вручную работает, в cron нет”: решения командами ---
-    {"prompt": "Скрипт не запускается в cron: сделай script.sh исполняемым.",
-     "answers": ["chmod +x script.sh"]},
-
-    {"prompt": "Скрипт не запускается в cron: проверь права на script.sh.",
-     "answers": ["ls -l script.sh"]},
-
-    {"prompt": "Cron не видит команду: как узнать полный путь к tar?",
-     "answers": ["which tar"]},
-
-    {"prompt": "Cron не видит команду: как узнать полный путь к bash?",
-     "answers": ["which bash"]},
-
-    {"prompt": "Запуск bash-скрипта через bash (если нет +x).",
-     "answers": ["bash script.sh", "/bin/bash script.sh"]},
-
-    {"prompt": "В cron лучше абсолютные пути: запусти /home/user/script.sh (пример строки cron).",
-     "answers": ["* * * * * /home/user/script.sh"]},
-
-    {"prompt": "Отладка cron: вывести дату в лог каждые 5 минут.",
-     "answers": ["*/5 * * * * date >> /tmp/cron-test.log 2>&1"]},
-
-    # --- tar: продвинутые ключи/сценарии ---
-    {"prompt": "Создать tar.gz архив и исключить папку node_modules (пример).",
-     "answers": ["tar -czf backup.tar.gz project --exclude=node_modules"]},
-
-    {"prompt": "Создать tar.gz архив и исключить все .log файлы (пример).",
-     "answers": ["tar -czf backup.tar.gz project --exclude='*.log'"]},
-
-    {"prompt": "Распаковать архив в директорию /tmp (используй -C).",
-     "answers": ["tar -xzf archive.tar.gz -C /tmp", "tar -xf archive.tar -C /tmp"]},
-
-    {"prompt": "Показать содержимое tar.gz архива и найти там слово config (pipe).",
-     "answers": ["tar -tf archive.tar.gz | grep config"]},
-
-    {"prompt": "Создать архив из /etc и сохранить в /tmp/etc.tar (пример).",
-     "answers": ["tar -cf /tmp/etc.tar /etc"]},
-
-    {"prompt": "Создать сжатый архив /etc в /tmp/etc.tar.gz (пример).",
-     "answers": ["tar -czf /tmp/etc.tar.gz /etc"]},
-
-    {"prompt": "Проверить, что файл passwd есть в архиве etc.tar (поиск по списку).",
-     "answers": ["tar -tf etc.tar | grep passwd"]},
-
-    {"prompt": "Создать архив из нескольких путей (например /etc/hosts и /etc/passwd).",
-     "answers": ["tar -cf sys.tar /etc/hosts /etc/passwd"]},
-
-    # --- pipes / grep / sed / awk / wc: сложные, но вводимые ---
-    {"prompt": "Посчитать количество процессов sshd.",
-     "answers": ["ps aux | grep sshd | wc -l", "ps aux | grep '[s]shd' | wc -l"]},
-
-    {"prompt": "Найти все строки ERROR в log.txt и посчитать их.",
-     "answers": ["grep -i error log.txt | wc -l", "grep -i 'error' log.txt | wc -l"]},
-
-    {"prompt": "Показать 5 последних строк, где есть слово error в log.txt.",
-     "answers": ["grep -i error log.txt | tail -n 5", "grep -i 'error' log.txt | tail -n 5"]},
-
-    {"prompt": "Заменить foo на bar во всём файле и вывести только первые 3 строки результата.",
-     "answers": ["sed 's/foo/bar/g' file.txt | head -n 3"]},
-
-    {"prompt": "Показать только уникальные строки файла file.txt (без сортировки не гарантировано, поэтому правильно: sort|uniq).",
-     "answers": ["sort file.txt | uniq"]},
-
-    {"prompt": "Посчитать количество уникальных строк в file.txt.",
-     "answers": ["sort file.txt | uniq | wc -l"]},
-
-    {"prompt": "Вывести 2-й столбец из файла data.txt (пробел-разделитель) через awk.",
-     "answers": ["awk '{print $2}' data.txt"]},
-
-    {"prompt": "Посчитать количество строк в файле через awk.",
-     "answers": ["awk 'END{print NR}' file.txt"]},
-
-    {"prompt": "Показать строки, начинающиеся с # в конфиге (grep regexp).",
-     "answers": ["grep '^#' config", "grep '^#' config.txt"]},
-
-    {"prompt": "Убрать пустые строки из file.txt (через grep).",
-     "answers": ["grep -v '^$' file.txt"]},
-
-    {"prompt": "Отправить stdout в файл out.log и stderr в err.log (пример).",
-     "answers": ["> out.log 2> err.log"]},
-
-    {"prompt": "Отправить и stdout и stderr в один файл all.log (пример).",
-     "answers": ["> all.log 2>&1", ">> all.log 2>&1"]},
-
-    {"prompt": "Подавить ошибки команды в /dev/null (только stderr).",
-     "answers": ["2> /dev/null"]},
-
-    {"prompt": "Подавить всё (stdout и stderr) в /dev/null.",
-     "answers": ["> /dev/null 2>&1"]},
-
-    # --- пути / переменные окружения / ssh ---
-    {"prompt": "Показать текущий PATH (точно).",
-     "answers": ["echo $PATH"]},
-
-    {"prompt": "Показать все переменные окружения и найти PATH (grep).",
-     "answers": ["env | grep PATH"]},
-
-    {"prompt": "Показать, где лежит команда ls.",
-     "answers": ["which ls"]},
-
-    {"prompt": "Показать переменную HOME.",
-     "answers": ["echo $HOME"]},
-
-    {"prompt": "Показать текущего пользователя и группу (одной командой).",
-     "answers": ["id"]},
-
-    {"prompt": "Подключиться по ssh к user@host (шаблон).",
-     "answers": ["ssh user@host"]},
-
-    {"prompt": "Скопировать файл local.txt на сервер в /tmp (scp шаблон).",
-     "answers": ["scp local.txt user@host:/tmp"]},
-
-    {"prompt": "Скопировать файл с сервера /tmp/remote.txt в текущую директорию (scp шаблон).",
-     "answers": ["scp user@host:/tmp/remote.txt ."]},
-
-    {"prompt": "Где обычно лежат ключи ssh у пользователя?",
-     "answers": ["~/.ssh", "/home/user/.ssh"]},
-
-    {"prompt": "Показать файлы в ~/.ssh.",
-     "answers": ["ls ~/.ssh", "ls -la ~/.ssh", "ls -al ~/.ssh"]},
-
-    # --- права / владельцы ---
-    {"prompt": "Сделать файл доступным на чтение всем (пример chmod).",
-     "answers": ["chmod a+r file"]},
-
-    {"prompt": "Сделать файл исполняемым для владельца (пример chmod).",
-     "answers": ["chmod u+x script.sh"]},
-
-    {"prompt": "Выставить права 644 на файл file.txt.",
-     "answers": ["chmod 644 file.txt"]},
-
-    {"prompt": "Выставить права 755 на script.sh.",
-     "answers": ["chmod 755 script.sh"]},
-
-    {"prompt": "Показать владельца и права у файла (одной командой).",
-     "answers": ["ls -l file"]},
-
-    # --- system / процессы ---
-    {"prompt": "Показать все процессы (коротко).",
-     "answers": ["ps", "ps -e"]},
-
-    {"prompt": "Показать все процессы подробно (ps aux).",
-     "answers": ["ps aux"]},
-
-    {"prompt": "Найти процесс по имени python (pgrep).",
-     "answers": ["pgrep python", "pgrep python3"]},
-
-    {"prompt": "Убить процесс по PID 1234 (пример).",
-     "answers": ["kill 1234"]},
-
-    {"prompt": "Убить процесс по PID 1234 принудительно (пример).",
-     "answers": ["kill -9 1234"]},
-
-    {"prompt": "Показать использование диска текущей папки (du).",
-     "answers": ["du -sh ."]},
-
-    {"prompt": "Показать свободное место на дисках (df).",
-     "answers": ["df -h"]},
-
-    # --- относительные/абсолютные пути, tricky ---
-    {"prompt": "Что такое абсолютный путь? Введи пример абсолютного пути.",
-     "answers": ["/home/user", "/etc", "/var/log"]},
-
-    {"prompt": "Что такое относительный путь? Введи пример относительного пути.",
-     "answers": ["./file", "../file", "docs/file"]},
-
-    {"prompt": "Перейти на уровень выше.",
-     "answers": ["cd .."]},
-
-    {"prompt": "Перейти в корень файловой системы.",
-     "answers": ["cd /"]},
-
-    # --- /dev/null и пайпы ---
-    {"prompt": "Скрыть вывод команды ls (stdout) в /dev/null.",
-     "answers": ["ls > /dev/null"]},
-
-    {"prompt": "Посчитать количество файлов в текущей директории (одним пайпом).",
-     "answers": ["ls | wc -l"]},
-
-    {"prompt": "Посчитать количество .txt файлов в текущей директории.",
-     "answers": ["ls *.txt | wc -l", "find . -maxdepth 1 -name '*.txt' | wc -l"]},
-
-    # --- cron: типовые ловушки ---
-    {"prompt": "Cron: запись для запуска каждые 15 минут и лог в /tmp/job.log (stdout+stderr).",
-     "answers": ["*/15 * * * * /home/user/job.sh >> /tmp/job.log 2>&1"]},
-
-    {"prompt": "Cron: запись для запуска в 00:00 каждую субботу.",
-     "answers": ["0 0 * * 6"]},
-
-    {"prompt": "Cron: запись для запуска в 00:00 каждое воскресенье.",
-     "answers": ["0 0 * * 0", "0 0 * * 7"]},
-
-    {"prompt": "Cron: запись для запуска 5-го числа каждого месяца в 03:30.",
-     "answers": ["30 3 5 * *"]},
-
-    {"prompt": "Cron: запись для запуска каждый день в 01:00 и вывод в /dev/null.",
-     "answers": ["0 1 * * * /home/user/job.sh > /dev/null 2>&1"]},
-
-    # --- текстовые “сценарии” с конкретным ответом ---
-    {"prompt": "Сделать бэкап /etc в /backup/etc-YYYY-MM-DD.tar.gz (одной командой).",
-     "answers": ["tar -czf /backup/etc-$(date +%F).tar.gz /etc"]},
-
-    {"prompt": "Показать из архива archive.tar.gz только строки со словом conf (список + grep).",
-     "answers": ["tar -tf archive.tar.gz | grep conf"]},
-
-    {"prompt": "Показать первые 3 файла из архива archive.tar (список + head).",
-     "answers": ["tar -tf archive.tar | head -n 3"]},
-
-    {"prompt": "Сжать папку logs в logs.tar.gz и сразу показать список (двумя командами в одной строке через &&).",
-     "answers": ["tar -czf logs.tar.gz logs && tar -tf logs.tar.gz"]},
-
-    {"prompt": "Найти в истории команд все строки, где есть ssh.",
-     "answers": ["history | grep ssh", "history | grep 'ssh'"]},
-
-    {"prompt": "Показать путь к текущему shell.",
-     "answers": ["echo $SHELL"]},
-
-    {"prompt": "Показать текущую дату в формате YYYY-MM-DD.",
-     "answers": ["date +%F"]},
-
-    {"prompt": "Создать файл backup-YYYY-MM-DD.txt (используй date).",
-     "answers": ["touch backup-$(date +%F).txt"]},
-
-    {"prompt": "Переименовать file.txt в file-YYYY-MM-DD.txt (используй date).",
-     "answers": ["mv file.txt file-$(date +%F).txt"]},
-
-    {"prompt": "Найти все .log файлы рекурсивно начиная с текущей директории.",
-     "answers": ["find . -name '*.log'"]},
-
-    {"prompt": "Найти все файлы больше 100MB (пример find).",
+    {"prompt": "Найти файлы больше 100 Мб в текущей директории.",
      "answers": ["find . -type f -size +100M"]},
 
-    {"prompt": "Посчитать количество найденных .log файлов (find + wc).",
-     "answers": ["find . -name '*.log' | wc -l"]},
+    {"prompt": "Найти все .sh файлы и сделать их исполняемыми (используй -exec).",
+     "answers": ["find . -name '*.sh' -exec chmod +x {} +", "find . -name '*.sh' -exec chmod +x {} \;"]},
 
-    {"prompt": "Показать дерево каталогов (если tree установлен).",
-     "answers": ["tree"]},
+    {"prompt": "Найти пустые директории и удалить их.",
+     "answers": ["find . -type d -empty -delete", "find . -type d -empty -exec rmdir {} +"]},
 
-    {"prompt": "Показать последние 20 строк системного лога (типовой путь, пример).",
-     "answers": ["tail -n 20 /var/log/syslog", "tail -n 20 /var/log/messages"]},
+    {"prompt": "Найти файлы, измененные менее 10 минут назад.",
+     "answers": ["find . -type f -mmin -10"]},
 
-    {"prompt": "Найти строку PATH в /etc/environment (grep).",
-     "answers": ["grep PATH /etc/environment", "grep 'PATH' /etc/environment"]},
+    {"prompt": "Найти все файлы с правами 777.",
+     "answers": ["find . -type f -perm 777"]},
 
-    {"prompt": "Показать активные сетевые соединения (если ss доступен).",
-     "answers": ["ss -tulpen", "ss -tulpn"]},
+    # --- TEXT PROCESSING: Grep, Sed, Awk ---
+    {"prompt": "Посчитать количество непустых строк в файле file.txt (grep).",
+     "answers": ["grep -cve '^$' file.txt", "grep -v '^$' file.txt | wc -l"]},
 
-    {"prompt": "Показать открытые порты (если netstat доступен).",
-     "answers": ["netstat -tulpen", "netstat -tulpn"]},
+    {"prompt": "Найти рекурсивно строку 'password' во всех конфигах (.conf) в /etc.",
+     "answers": ["grep -r 'password' /etc/*.conf", "grep -r 'password' /etc --include='*.conf'"]},
 
-    # --- “бог”: нормализация и проверка мыслей через команду ---
-    {"prompt": "Проверить, что команда tar существует и вывести путь (если нет — ничего не ломать).",
-     "answers": ["command -v tar", "which tar"]},
+    {"prompt": "Вывести только 2-й столбец из файла data.csv (разделитель запятая).",
+     "answers": ["awk -F, '{print $2}' data.csv"]},
 
-    {"prompt": "Проверить, что cron работает (через status, если systemd).",
-     "answers": ["systemctl status cron", "systemctl status crond"]},
+    {"prompt": "Заменить все вхождения 'http' на 'https' в файле site.conf (редактирование на месте -i).",
+     "answers": ["sed -i 's/http/https/g' site.conf"]},
 
-    {"prompt": "Перезапустить cron (если systemd).",
-     "answers": ["sudo systemctl restart cron", "sudo systemctl restart crond"]},
+    {"prompt": "Удалить 3-ю строку из файла list.txt (через sed).",
+     "answers": ["sed '3d' list.txt", "sed -i '3d' list.txt"]},
 
-    {"prompt": "Проверить логи cron (Debian/Ubuntu: syslog).",
-     "answers": ["grep cron /var/log/syslog", "grep CRON /var/log/syslog"]},
+    {"prompt": "Вывести строки файла, длина которых больше 10 символов (awk).",
+     "answers": ["awk 'length($0) > 10' file.txt"]},
 
-    {"prompt": "Проверить логи cron (RHEL: /var/log/cron).",
-     "answers": ["cat /var/log/cron", "tail -n 50 /var/log/cron"]},
+    {"prompt": "Посчитать количество уникальных IP-адресов в файле access.log (sort + uniq).",
+     "answers": ["awk '{print $1}' access.log | sort | uniq | wc -l"]},
 
-    {"prompt": "Сделать тестовую cron-джобу: писать дату в /tmp/ping.log каждую минуту.",
-     "answers": ["* * * * * date >> /tmp/ping.log 2>&1"]},
+    {"prompt": "Показать 5 самых часто встречающихся строк (sort + uniq -c).",
+     "answers": ["sort file.txt | uniq -c | sort -nr | head -n 5"]},
 
-    {"prompt": "Показать содержимое /tmp/ping.log.",
-     "answers": ["cat /tmp/ping.log"]},
+    {"prompt": "Вывести последнюю строку файла (tail или sed).",
+     "answers": ["tail -n 1 file.txt", "sed -n '$p' file.txt"]},
 
-    {"prompt": "Удалить тестовую cron-джобу (логически: открыть редактор).",
-     "answers": ["crontab -e"]},
+    # --- ARCHIVING: Tar Advanced ---
+    {"prompt": "Создать архив backup.tar.gz из папки /data, исключив папку /data/cache.",
+     "answers": ["tar -czf backup.tar.gz /data --exclude=/data/cache", "tar -czf backup.tar.gz /data --exclude='cache'"]},
 
-    {"prompt": "Показать список файлов в /home/user/backups, отсортировав по времени (новые внизу/вверху).",
-     "answers": ["ls -lt /home/user/backups", "ls -ltr /home/user/backups"]},
+    {"prompt": "Распаковать архив app.tar.gz в директорию /opt/app (создав её, если нужно).",
+     "answers": ["mkdir -p /opt/app && tar -xzf app.tar.gz -C /opt/app"]},
 
-    {"prompt": "Показать размер архива backup.tar.gz.",
-     "answers": ["ls -lh backup.tar.gz", "du -h backup.tar.gz"]},
+    {"prompt": "Просмотреть содержимое tar-архива без распаковки.",
+     "answers": ["tar -tf archive.tar.gz"]},
+
+    {"prompt": "Добавить файл readme.txt в существующий архив data.tar (без сжатия).",
+     "answers": ["tar -rf data.tar readme.txt"]},
+
+    {"prompt": "Извлечь только один файл config.xml из архива backup.tar.gz.",
+     "answers": ["tar -xzf backup.tar.gz config.xml"]},
+
+    # --- PROCESSES & SYSTEM: Kill, PS, Ports ---
+    {"prompt": "Найти PID процесса 'nginx' (pgrep).",
+     "answers": ["pgrep nginx"]},
+
+    {"prompt": "Убить все процессы с именем 'php-fpm' (pkill или killall).",
+     "answers": ["pkill php-fpm", "killall php-fpm"]},
+
+    {"prompt": "Показать процессы, потребляющие больше всего памяти (top/ps sort).",
+     "answers": ["ps aux --sort=-%mem | head", "top -o %MEM"]},
+
+    {"prompt": "Показать, какой процесс слушает порт 80 (lsof или netstat).",
+     "answers": ["lsof -i :80", "netstat -nlp | grep :80", "ss -lptn 'sport = :80'"]},
+
+    {"prompt": "Показать дерево процессов (pstree).",
+     "answers": ["pstree", "pstree -p"]},
+
+    {"prompt": "Показать время работы системы и среднюю загрузку (uptime).",
+     "answers": ["uptime"]},
+
+    {"prompt": "Показать 10 самых больших файлов в /var (du + sort).",
+     "answers": ["du -ah /var | sort -rh | head -n 10"]},
+
+    {"prompt": "Показать использование инодов (inodes) на диске.",
+     "answers": ["df -i"]},
+
+    # --- PERMISSIONS & USERS ---
+    {"prompt": "Рекурсивно изменить владельца папки /var/www на www-data.",
+     "answers": ["chown -R www-data:www-data /var/www"]},
+
+    {"prompt": "Рекурсивно установить права 644 на файлы и 755 на папки (обычно требует find).",
+     "answers": ["chmod -R u=rwX,go=rX /path", "find . -type d -exec chmod 755 {} + && find . -type f -exec chmod 644 {} +"]},
+
+    {"prompt": "Добавить пользователя user в группу docker.",
+     "answers": ["usermod -aG docker user", "gpasswd -a user docker"]},
+
+    {"prompt": "Заблокировать пароль пользователя user (passwd).",
+     "answers": ["passwd -l user"]},
+
+    # --- SSH & NETWORK ---
+    {"prompt": "Сгенерировать SSH-ключ (rsa, 4096 бит) без вопросов.",
+     "answers": ["ssh-keygen -t rsa -b 4096"]},
+
+    {"prompt": "Скопировать свой публичный ключ на удаленный сервер 192.168.1.5.",
+     "answers": ["ssh-copy-id user@192.168.1.5"]},
+
+    {"prompt": "Проверить доступность порта 80 на google.com (nc/telnet).",
+     "answers": ["nc -zv google.com 80", "telnet google.com 80"]},
+
+    {"prompt": "Скачать файл по URL и сохранить под именем output.file (curl/wget).",
+     "answers": ["curl -o output.file http://site.com/file", "wget -O output.file http://site.com/file"]},
+
+    {"prompt": "Показать свой внешний IP (через curl и сервис).",
+     "answers": ["curl ifconfig.me", "curl icanhazip.com"]},
+
+    # --- SHELL TRICKS & PIPES ---
+    {"prompt": "Создать структуру папок project/{src,bin,lib} одной командой.",
+     "answers": ["mkdir -p project/{src,bin,lib}"]},
+
+    {"prompt": "Очистить содержимое файла log.txt, не удаляя его.",
+     "answers": ["> log.txt", "truncate -s 0 log.txt", "echo -n > log.txt"]},
+
+    {"prompt": "Запустить команду в фоне и отвязать от терминала (nohup).",
+     "answers": ["nohup command &"]},
+
+    {"prompt": "Повторить последнюю команду из истории (sudo !!).",
+     "answers": ["sudo !!"]},
+
+    {"prompt": "Посчитать сумму чисел в столбце файла numbers.txt (awk).",
+     "answers": ["awk '{s+=$1} END {print s}' numbers.txt"]},
+
+    {"prompt": "Объединить содержимое file1.txt и file2.txt в all.txt.",
+     "answers": ["cat file1.txt file2.txt > all.txt"]},
+
+    {"prompt": "Сравнить два файла и показать различия (diff).",
+     "answers": ["diff file1.txt file2.txt"]},
+
+    {"prompt": "Следить за логом и искать слово 'ERROR' в реальном времени.",
+     "answers": ["tail -f access.log | grep 'ERROR'"]},
+
+    # --- DISK & FILESYSTEM ---
+    {"prompt": "Смонтировать ISO образ disk.iso в /mnt/iso.",
+     "answers": ["mount -o loop disk.iso /mnt/iso"]},
+
+    {"prompt": "Размонтировать диск /mnt/data (принудительно/лениво, если занят).",
+     "answers": ["umount -l /mnt/data", "umount -f /mnt/data"]},
+
+    {"prompt": "Создать символическую ссылку /usr/bin/python -> python3.",
+     "answers": ["ln -s /usr/bin/python3 /usr/bin/python"]},
+
+    {"prompt": "Найти битые символические ссылки в текущей папке.",
+     "answers": ["find . -xtype l"]},
+
+    {"prompt": "Узнать UUID дисковых разделов (blkid).",
+     "answers": ["blkid", "lsblk -f"]},
 ]
